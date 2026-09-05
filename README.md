@@ -58,8 +58,11 @@ skill index.
 ## How the entries resolve
 
 Plugins point at the **published npm package** for each tool, so installing one gets the
-same code `npx -y <tool>` would run, at its released version. `openpanel-axi` points at its
-GitHub repository until its first npm release, then it switches to npm like the rest.
+same code `npx -y <tool>` would run, at its released version.
+
+Note that the `github: owner/repo` source form clones over `git@github.com` and fails on a
+machine with no SSH key. Where a git source is unavoidable, use the `url` form with an
+explicit `https://` URL.
 
 No skill files are copied into this repository. There is nothing here to keep in sync — each
 tool ships its own `skills/<name>/SKILL.md`, and this marketplace only references it.

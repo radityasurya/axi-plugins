@@ -48,9 +48,8 @@
       "description": "OpenPanel analytics: visitors, pages, traffic sources, devices, campaigns, raw events, plus project/client management and event tracking.",
       "category": "analytics",
       "source": {
-        "source": "url",
-        "url": "https://github.com/radityasurya/openpanel-axi.git",
-        "ref": "main"
+        "source": "npm",
+        "package": "openpanel-axi"
       }
     },
     {
