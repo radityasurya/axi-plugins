@@ -8,6 +8,12 @@
   },
   "plugins": [
     {
+      "name": "axi",
+      "description": "Status view for every AXI CLI on this machine: what is installed, where from, and whether it is configured and responding. `/axi:status`.",
+      "category": "productivity",
+      "source": "./plugins/axi"
+    },
+    {
       "name": "gh-axi",
       "description": "GitHub from the shell: issues, pull requests, stacked PRs, workflow runs, releases, Projects, Actions secrets, gists, and raw API access.",
       "category": "development",

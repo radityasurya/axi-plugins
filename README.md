@@ -33,6 +33,7 @@ so the same repo works unchanged:
 
 | Plugin | Covers |
 | --- | --- |
+| `axi` | `/axi:status` — what is installed, and whether it is configured and responding |
 | `gh-axi` | Issues, PRs, stacked PRs, workflow runs, releases, Projects, Actions secrets, gists |
 | `aws-axi` | EC2, S3, IAM, Lambda, KMS, CloudWatch, SSM, Secrets Manager |
 | `cloudflare-axi` | Zones, DNS, edge cache, Email Routing, bot protection |
@@ -44,6 +45,32 @@ so the same repo works unchanged:
 Each plugin ships one skill: a short stub that points the agent at the tool's own
 `npx -y <tool>` dashboard and `--help`. The CLI stays the source of truth, so a plugin
 cannot go stale against a newer release of the tool it describes.
+
+## Knowing what you have: `/axi:status`
+
+```
+/plugin install axi@axi-plugins
+/axi:status
+```
+
+```
+axi tools: 7 installed, 7 responding
+
+ok   aws-axi              skill
+                          status: not authenticated
+                          help[3]: Run `aws sso login` to authenticate via SSO, ...
+ok   coolify-axi          skill
+                          context: hireopz
+                          count: 19 total
+```
+
+It finds tools installed as plugins (from **any** marketplace, not just this one), as
+skills, or simply on `PATH`, and reports each one's live state.
+
+There is no table of per-tool credentials in it to fall out of date. An AXI tool run with no
+arguments prints its own live state, and reports a missing credential as data with the fix
+attached — so the status of a tool is just what the tool says about itself. Adding a new AXI
+CLI to your machine needs no change here.
 
 ## Why a plugin and not an MCP server
 

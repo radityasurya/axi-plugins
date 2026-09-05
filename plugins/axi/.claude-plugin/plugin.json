@@ -1,0 +1,6 @@
+{
+  "name": "axi",
+  "description": "Report every AXI CLI installed on this machine and whether it is actually working",
+  "version": "0.1.0",
+  "author": { "name": "Raditya Surya", "url": "https://github.com/radityasurya" }
+}
