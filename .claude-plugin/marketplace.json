@@ -1,0 +1,53 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "axi-plugins",
+  "description": "Every AXI CLI as an installable plugin — agent-ergonomic tools for GitHub, AWS, Cloudflare, Coolify, OpenPanel, Chrome DevTools, and provider quotas. Zero per-turn token cost, unlike an MCP server.",
+  "owner": {
+    "name": "Raditya Surya",
+    "url": "https://github.com/radityasurya"
+  },
+  "plugins": [
+    {
+      "name": "gh-axi",
+      "description": "GitHub from the shell: issues, pull requests, stacked PRs, workflow runs, releases, Projects, Actions secrets, gists, and raw API access.",
+      "category": "development",
+      "source": { "source": "npm", "package": "gh-axi" }
+    },
+    {
+      "name": "aws-axi",
+      "description": "AWS operations: EC2, S3, IAM, Lambda, KMS, CloudWatch, SSM, Secrets Manager, and any other service. Prefer over raw `aws`.",
+      "category": "devops",
+      "source": { "source": "npm", "package": "aws-axi" }
+    },
+    {
+      "name": "cloudflare-axi",
+      "description": "Cloudflare zones, DNS records, edge cache purging, Email Routing, and bot-protection diagnosis.",
+      "category": "devops",
+      "source": { "source": "npm", "package": "cloudflare-axi" }
+    },
+    {
+      "name": "coolify-axi",
+      "description": "Coolify applications, databases, services, servers, and deployments on a self-hosted or cloud instance.",
+      "category": "devops",
+      "source": { "source": "npm", "package": "coolify-axi" }
+    },
+    {
+      "name": "openpanel-axi",
+      "description": "OpenPanel analytics: visitors, pages, traffic sources, devices, campaigns, raw events, plus project/client management and event tracking.",
+      "category": "analytics",
+      "source": { "source": "github", "repo": "radityasurya/openpanel-axi" }
+    },
+    {
+      "name": "chrome-devtools-axi",
+      "description": "Drive a real Chrome session: navigate, click, fill forms, run JavaScript, read console and network, screenshot, audit performance.",
+      "category": "development",
+      "source": { "source": "npm", "package": "chrome-devtools-axi" }
+    },
+    {
+      "name": "quota-axi",
+      "description": "Local quota windows for Claude, Codex, Cursor, Copilot, Grok, Kimi, Z.AI, and more — remaining runway, pace, and reset times.",
+      "category": "productivity",
+      "source": { "source": "npm", "package": "quota-axi" }
+    }
+  ]
+}
