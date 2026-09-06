@@ -55,18 +55,18 @@ cannot go stale against a newer release of the tool it describes.
 ```
 
 ```
-axi tools: 7 installed, 7 responding
-
-ok   aws-axi              skill
-                          status: not authenticated
-                          help[3]: Run `aws sso login` to authenticate via SSO, ...
-ok   coolify-axi          skill
-                          context: hireopz
-                          count: 19 total
+axi: 8 installed, 8 responding
+tools[8]{name,where,state,status}:
+  aws-axi,skill,ok,"status: not authenticated"
+  cloudflare-axi,skill,ok,"zones: no Cloudflare API token in the environment"
+  coolify-axi,skill,ok,"context: hireopz"
+  openpanel-axi,"plugin:axi-plugins",ok,"live: 3 visitors active right now"
+help[3]: Run `npx -y aws-axi` for the exact fix it reports,...
 ```
 
 It finds tools installed as plugins (from **any** marketplace, not just this one), as
-skills, or simply on `PATH`, and reports each one's live state.
+skills, or simply on `PATH`, and reports each one's live state — as
+[TOON](https://toonformat.dev/), like the tools it reports on.
 
 There is no table of per-tool credentials in it to fall out of date. An AXI tool run with no
 arguments prints its own live state, and reports a missing credential as data with the fix

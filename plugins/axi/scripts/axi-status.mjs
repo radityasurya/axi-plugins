@@ -10,6 +10,7 @@ import { execFile } from "node:child_process";
 import { accessSync, constants, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 const exec = promisify(execFile);
@@ -17,6 +18,50 @@ const exec = promisify(execFile);
 // npx may have to download a package before it can answer.
 const TIMEOUT_MS = Number(process.env.AXI_STATUS_TIMEOUT ?? 25_000);
 const WIDTH = 78;
+
+// --- Minimal TOON emitter -------------------------------------------------
+// This script has no dependencies (a plugin ships no node_modules), and it
+// emits exactly two shapes: scalar fields and one tabular array of strings.
+// The quoting predicate below is SPEC.md §7.2 in full, because over-quoting is
+// harmless while under-quoting makes an agent silently misread a cell.
+
+const NUMERIC_LIKE = /^[+-]?[0-9]+(?:\.[0-9]+)?(?:e[+-]?[0-9]+)?$/i;
+
+export function quoteToon(value, delimiter = ",") {
+  const text = String(value);
+  const mustQuote =
+    text === "" ||
+    text !== text.trim() ||
+    text === "true" ||
+    text === "false" ||
+    text === "null" ||
+    NUMERIC_LIKE.test(text) ||
+    /[:"\\[\]{}]/.test(text) ||
+    // eslint-disable-next-line no-control-regex
+    /[\u0000-\u001f]/.test(text) ||
+    text.includes(delimiter) ||
+    text.startsWith("-") ||
+    text.startsWith("#");
+  if (!mustQuote) return text;
+  const escaped = text
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t");
+  return `"${escaped}"`;
+}
+
+/** §9.3 tabular form: `key[N]{f1,f2}:` then one indented row per element. */
+export function toonTable(key, fields, rows) {
+  const header = `${key}[${rows.length}]{${fields.join(",")}}:`;
+  return [header, ...rows.map((row) => `  ${fields.map((f) => quoteToon(row[f])).join(",")}`)].join("\n");
+}
+
+/** §9.1 inline primitive array. */
+export function toonList(key, values) {
+  return `${key}[${values.length}]: ${values.map((v) => quoteToon(v)).join(",")}`;
+}
 
 // The design-principles skill is named `axi` but is not a CLI.
 const NOT_A_TOOL = new Set(["axi"]);
@@ -120,38 +165,61 @@ function firstLine(...candidates) {
   return "failed";
 }
 
-const tools = await discover();
+/**
+ * Guarded so the TOON helpers above can be imported by tests without this
+ * script spawning every installed AXI tool as a side effect.
+ */
+async function main() {
+  const tools = await discover();
 
-if (tools.length === 0) {
-  console.log("axi tools: none installed");
-  console.log("Add some with `/plugin marketplace add radityasurya/axi-plugins`");
-  process.exit(0);
+  if (tools.length === 0) {
+    console.log("axi: 0 AXI tools installed");
+    console.log(toonList("help", ["Run `/plugin marketplace add radityasurya/axi-plugins` to install some"]));
+    return;
+  }
+
+  const results = await Promise.all(
+    tools.map(async (tool) => ({
+      ...tool,
+      ...(tool.enabled === false ? { ok: false, lines: ["disabled"] } : await probe(tool)),
+    })),
+  );
+
+  const working = results.filter((tool) => tool.ok).length;
+  const unconfigured = results.filter((tool) => tool.ok && /\b(no|not)\b/i.test(tool.lines[0] ?? ""));
+
+  console.log(`axi: ${results.length} installed, ${working} responding`);
+  console.log(
+    toonTable(
+      "tools",
+      ["name", "where", "state", "status"],
+      results.map((tool) => ({
+        name: tool.name,
+        where: tool.sources.join("+") + (tool.version && tool.version !== "unknown" ? ` v${tool.version}` : ""),
+        state: tool.ok ? "ok" : "failed",
+        // The tool's own first line of live state — AXI §2 keeps this to the one
+        // field that decides what to do next, not the tool's whole home view.
+        status: tool.lines[0] ?? "-",
+      })),
+    ),
+  );
+
+  const others = (await installedPlugins())
+    .map((plugin) => String(plugin.id))
+    .filter((id) => !isTool(id.split("@")[0]));
+  if (others.length) console.log(toonList("other_plugins", others));
+
+  console.log(
+    toonList("help", [
+      ...(unconfigured.length
+        ? [`Run \`npx -y ${unconfigured[0].name}\` for the exact fix it reports`]
+        : []),
+      "Run any tool with no arguments for its full live state",
+      "Run `/plugin install <name>@axi-plugins` to add another",
+    ]),
+  );
 }
 
-const results = await Promise.all(
-  tools.map(async (tool) => ({
-    ...tool,
-    ...(tool.enabled === false ? { ok: false, lines: ["disabled"] } : await probe(tool)),
-  })),
-);
-
-const pad = Math.max(...results.map((tool) => tool.name.length));
-const working = results.filter((tool) => tool.ok).length;
-
-console.log(`axi tools: ${results.length} installed, ${working} responding`);
-console.log("");
-for (const tool of results) {
-  const mark = tool.ok ? "ok  " : "FAIL";
-  const version = tool.version && tool.version !== "unknown" ? ` v${tool.version}` : "";
-  const where = tool.sources.join(" ") + version;
-  console.log(`${mark} ${tool.name.padEnd(pad)}  ${where}`);
-  for (const line of tool.lines) console.log(`${" ".repeat(pad + 7)}${line}`);
-}
-
-const others = (await installedPlugins())
-  .map((plugin) => String(plugin.id))
-  .filter((id) => !isTool(id.split("@")[0]));
-if (others.length) {
-  console.log("");
-  console.log(`other plugins installed (${others.length}): ${others.join(", ")}`);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
 }
