@@ -37,6 +37,7 @@ so the same repo works unchanged:
 | `gh-axi` | Issues, PRs, stacked PRs, workflow runs, releases, Projects, Actions secrets, gists |
 | `aws-axi` | EC2, S3, IAM, Lambda, KMS, CloudWatch, SSM, Secrets Manager |
 | `cloudflare-axi` | Zones, DNS, edge cache, Email Routing, bot protection |
+| `namecheap-axi` | Domains, expiry, DNS host records, nameservers, registrar lock |
 | `coolify-axi` | Applications, databases, services, servers, deployments |
 | `openpanel-axi` | Analytics reads, project/client management, event tracking |
 | `gsc-axi` | Search Console: performance, comparisons, URL inspection, sitemaps |

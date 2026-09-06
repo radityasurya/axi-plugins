@@ -41,6 +41,16 @@
       }
     },
     {
+      "name": "namecheap-axi",
+      "description": "Namecheap domains and DNS: expiry and renewals, availability checks, host records with safe read-modify-write, nameservers, registrar lock, and WHOIS contacts.",
+      "category": "devops",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/radityasurya/namecheap-axi.git",
+        "ref": "main"
+      }
+    },
+    {
       "name": "coolify-axi",
       "description": "Coolify applications, databases, services, servers, and deployments on a self-hosted or cloud instance.",
       "category": "devops",
