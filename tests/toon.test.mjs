@@ -103,3 +103,18 @@ test("the fix column quotes the tool's own next step, unwrapped", async () => {
   // A ready tool has nothing to fix.
   assert.equal(fixFor({ ok: true, lines: ["context: hireopz", "count: 19 total"] }), "-");
 });
+
+test("the fix stops at the first suggestion even when the next one is re-quoted", async () => {
+  const { fixFor } = await import("../plugins/axi/scripts/axi-status.mjs");
+  const line = 'help[2]: "Create a scoped token at https://dash.cloudflare.com/profile/api-tokens","Export it as CLOUDFLARE_API_TOKEN, then re-run"';
+  assert.equal(
+    fixFor({ ok: true, lines: ["zones: no token", line] }),
+    "Create a scoped token at https://dash.cloudflare.com/profile/api-tokens",
+  );
+});
+
+test("a fix is never truncated — it has to stay runnable", async () => {
+  const { fixFor } = await import("../plugins/axi/scripts/axi-status.mjs");
+  const long = `help[1]: Run \`npx -y some-tool --with ${"x".repeat(120)}\``;
+  assert.ok(!fixFor({ ok: true, lines: ["no creds", long] }).includes("…"));
+});

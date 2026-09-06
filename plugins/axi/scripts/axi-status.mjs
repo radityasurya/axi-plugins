@@ -148,7 +148,10 @@ export function summarize(stdout) {
         !TIMESTAMP_VALUE.test(line),
     );
   if (lines.length === 0) return ["(no output)"];
-  return lines.slice(0, 2).map((line) => (line.length > WIDTH ? `${line.slice(0, WIDTH - 1)}…` : line));
+  // Returned untruncated: the status line is clipped at render time for token
+  // discipline, but the fix line carries URLs and commands that stop working
+  // when cut mid-string.
+  return lines.slice(0, 2);
 }
 
 export async function probe(tool) {
@@ -193,7 +196,9 @@ export function classify(tool) {
 export function fixFor(tool) {
   if (classify(tool) === "ready") return "-";
   const line = (tool.lines[1] ?? "").trim().replace(/^help\[\d+\]:\s*/, "");
-  const first = line.split(/,(?=[A-Z(]|Run |Or |Export |Create |Add )/)[0].trim();
+  // Each suggestion starts with a capital, optionally re-quoted by the source
+  // tool's own encoder — one rule instead of a list of verbs to keep in sync.
+  const first = line.split(/,(?="?[A-Z(])/)[0].trim();
   // The source tool quoted the cell because it contained a comma or colon;
   // that quoting belongs to its output, not to ours.
   return first.replace(/^"|"$/g, "").trim() || "-";
@@ -202,10 +207,19 @@ export function fixFor(tool) {
 const ICON = { ready: "✔", unconfigured: "!", failed: "✘" };
 const COLOR = { ready: "[32m", unconfigured: "[33m", failed: "[31m" };
 const RESET = "[0m";
+const DIM = "[2m";
+
+/** Clip for display only — never applied to a fix, which must stay runnable. */
+const clip = (text, width) => (text.length > width ? `${text.slice(0, width - 1)}…` : text);
 
 /** Human render: icons, colour, aligned columns. */
 function pretty(results, others) {
-  const color = process.env.NO_COLOR ? () => "" : (state) => COLOR[state];
+  // Colour belongs to the stream, not the format: `--pretty` into a pipe must
+  // not spray escape codes into whatever captured it.
+  const plain = Boolean(process.env.NO_COLOR) || !process.stdout.isTTY;
+  const color = plain ? () => "" : (state) => COLOR[state];
+  const dim = plain ? "" : DIM;
+  const reset = plain ? "" : RESET;
   const pad = Math.max(...results.map((tool) => tool.name.length));
   const counts = { ready: 0, unconfigured: 0, failed: 0 };
   for (const tool of results) counts[classify(tool)] += 1;
@@ -217,10 +231,10 @@ function pretty(results, others) {
   for (const tool of results) {
     const state = classify(tool);
     lines.push(
-      `${color(state)}${ICON[state]}${RESET} ${tool.name.padEnd(pad)}  ${tool.lines[0] ?? "-"}`,
+      `${color(state)}${ICON[state]}${reset} ${tool.name.padEnd(pad)}  ${clip(tool.lines[0] ?? "-", WIDTH)}`,
     );
     const fix = fixFor(tool);
-    if (fix !== "-") lines.push(`${" ".repeat(pad + 3)}${"[2m"}→ ${fix}${RESET}`);
+    if (fix !== "-") lines.push(`${" ".repeat(pad + 3)}${dim}→ ${fix}${reset}`);
   }
   if (others.length) lines.push("", `${others.length} other plugins: ${others.join(", ")}`);
   return lines.join("\n");
@@ -276,7 +290,7 @@ async function main() {
         state: classify(tool),
         // The tool's own first line of live state — AXI §2 keeps this to the one
         // field that decides what to do next, not the tool's whole home view.
-        status: tool.lines[0] ?? "-",
+        status: clip(tool.lines[0] ?? "-", WIDTH),
         // ...and the tool's own fix, so the reader never has to invent one.
         fix: fixFor(tool),
       })),
