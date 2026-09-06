@@ -100,7 +100,7 @@ async function installedPlugins() {
 }
 
 /** Union of the places an AXI tool can be installed from. */
-async function discover() {
+export async function discover() {
   const found = new Map();
   const add = (name, source, extra = {}) => {
     const entry = found.get(name) ?? { name, sources: [], ...extra };
@@ -151,7 +151,7 @@ export function summarize(stdout) {
   return lines.slice(0, 2).map((line) => (line.length > WIDTH ? `${line.slice(0, WIDTH - 1)}…` : line));
 }
 
-async function probe(tool) {
+export async function probe(tool) {
   const binary = onPath(tool.name);
   const [command, args] = binary ? [binary, []] : ["npx", ["-y", tool.name]];
   try {
@@ -176,11 +176,66 @@ function firstLine(...candidates) {
   return "failed";
 }
 
+// A tool that answers but reports a missing credential is not the same as one
+// that crashed, and an agent deciding what to do next needs them apart.
+const UNCONFIGURED = /\b(no|not|missing)\b/i;
+
+export function classify(tool) {
+  if (!tool.ok) return "failed";
+  return UNCONFIGURED.test(tool.lines[0] ?? "") ? "unconfigured" : "ready";
+}
+
+/**
+ * The tool's own next step. AXI §6 requires a missing credential to come back
+ * with the fix attached, so it is already in the output — it just arrives as a
+ * TOON `help[N]:` array flattened with commas. Take the first suggestion.
+ */
+export function fixFor(tool) {
+  if (classify(tool) === "ready") return "-";
+  const line = (tool.lines[1] ?? "").trim().replace(/^help\[\d+\]:\s*/, "");
+  const first = line.split(/,(?=[A-Z(]|Run |Or |Export |Create |Add )/)[0].trim();
+  // The source tool quoted the cell because it contained a comma or colon;
+  // that quoting belongs to its output, not to ours.
+  return first.replace(/^"|"$/g, "").trim() || "-";
+}
+
+const ICON = { ready: "✔", unconfigured: "!", failed: "✘" };
+const COLOR = { ready: "[32m", unconfigured: "[33m", failed: "[31m" };
+const RESET = "[0m";
+
+/** Human render: icons, colour, aligned columns. */
+function pretty(results, others) {
+  const color = process.env.NO_COLOR ? () => "" : (state) => COLOR[state];
+  const pad = Math.max(...results.map((tool) => tool.name.length));
+  const counts = { ready: 0, unconfigured: 0, failed: 0 };
+  for (const tool of results) counts[classify(tool)] += 1;
+
+  const lines = [
+    `${counts.ready} ready · ${counts.unconfigured} not configured · ${counts.failed} failed`,
+    "",
+  ];
+  for (const tool of results) {
+    const state = classify(tool);
+    lines.push(
+      `${color(state)}${ICON[state]}${RESET} ${tool.name.padEnd(pad)}  ${tool.lines[0] ?? "-"}`,
+    );
+    const fix = fixFor(tool);
+    if (fix !== "-") lines.push(`${" ".repeat(pad + 3)}${"[2m"}→ ${fix}${RESET}`);
+  }
+  if (others.length) lines.push("", `${others.length} other plugins: ${others.join(", ")}`);
+  return lines.join("\n");
+}
+
 /**
  * Guarded so the TOON helpers above can be imported by tests without this
  * script spawning every installed AXI tool as a side effect.
  */
 async function main() {
+  const args = process.argv.slice(2);
+  // TOON is the contract for the agent that invokes `/axi:status`; the icons
+  // are for a person reading a terminal. Default to whichever is being served.
+  const human = args.includes("--pretty") || (process.stdout.isTTY && !args.includes("--toon"));
+
   const tools = await discover();
 
   if (tools.length === 0) {
@@ -196,35 +251,42 @@ async function main() {
     })),
   );
 
-  const working = results.filter((tool) => tool.ok).length;
-  const unconfigured = results.filter((tool) => tool.ok && /\b(no|not)\b/i.test(tool.lines[0] ?? ""));
+  const others = (await installedPlugins())
+    .map((plugin) => String(plugin.id))
+    .filter((id) => !isTool(id.split("@")[0]));
 
-  console.log(`axi: ${results.length} installed, ${working} responding`);
+  if (human) {
+    console.log(pretty(results, others));
+    return;
+  }
+
+  const counts = { ready: 0, unconfigured: 0, failed: 0 };
+  for (const tool of results) counts[classify(tool)] += 1;
+
+  console.log(
+    `axi: ${results.length} installed, ${counts.ready} ready, ${counts.unconfigured} not configured, ${counts.failed} failed`,
+  );
   console.log(
     toonTable(
       "tools",
-      ["name", "where", "state", "status"],
+      ["name", "where", "state", "status", "fix"],
       results.map((tool) => ({
         name: tool.name,
         where: tool.sources.join("+") + (tool.version && tool.version !== "unknown" ? ` v${tool.version}` : ""),
-        state: tool.ok ? "ok" : "failed",
+        state: classify(tool),
         // The tool's own first line of live state — AXI §2 keeps this to the one
         // field that decides what to do next, not the tool's whole home view.
         status: tool.lines[0] ?? "-",
+        // ...and the tool's own fix, so the reader never has to invent one.
+        fix: fixFor(tool),
       })),
     ),
   );
 
-  const others = (await installedPlugins())
-    .map((plugin) => String(plugin.id))
-    .filter((id) => !isTool(id.split("@")[0]));
   if (others.length) console.log(toonList("other_plugins", others));
 
   console.log(
     toonList("help", [
-      ...(unconfigured.length
-        ? [`Run \`npx -y ${unconfigured[0].name}\` for the exact fix it reports`]
-        : []),
       "Run any tool with no arguments for its full live state",
       "Run `/plugin install <name>@axi-plugins` to add another",
     ]),

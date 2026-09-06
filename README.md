@@ -55,14 +55,19 @@ cannot go stale against a newer release of the tool it describes.
 ```
 
 ```
-axi: 8 installed, 8 responding
-tools[8]{name,where,state,status}:
-  aws-axi,skill,ok,"status: not authenticated"
-  cloudflare-axi,skill,ok,"zones: no Cloudflare API token in the environment"
-  coolify-axi,skill,ok,"context: hireopz"
-  openpanel-axi,"plugin:axi-plugins",ok,"live: 3 visitors active right now"
-help[3]: Run `npx -y aws-axi` for the exact fix it reports,...
+4 ready · 4 not configured · 0 failed
+
+✔ coolify-axi          context: hireopz
+✔ openpanel-axi        api: "https://openpanel.hireopz.com/api"
+! aws-axi              status: not authenticated
+                       → Run `aws sso login` to authenticate via SSO
+! cloudflare-axi       zones: no Cloudflare API token in the environment
+                       → Create a scoped token at https://dash.cloudflare.com/profile/api-tokens
 ```
+
+Run it in a terminal and you get the view above. Piped — which is how the slash command
+invokes it — you get TOON instead, with a `fix` column carrying each tool's own next step.
+`--pretty` and `--toon` force either one.
 
 It finds tools installed as plugins (from **any** marketplace, not just this one), as
 skills, or simply on `PATH`, and reports each one's live state — as
