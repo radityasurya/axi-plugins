@@ -63,9 +63,8 @@
       "description": "Google Search Console: search performance by query/page/country/device, period comparisons, queries ranking 4-20, URL indexing status, and sitemaps.",
       "category": "analytics",
       "source": {
-        "source": "url",
-        "url": "https://github.com/radityasurya/gsc-axi.git",
-        "ref": "main"
+        "source": "npm",
+        "package": "gsc-axi"
       }
     },
     {

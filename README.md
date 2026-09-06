@@ -91,8 +91,7 @@ skill index.
 ## How the entries resolve
 
 Plugins point at the **published npm package** for each tool, so installing one gets the
-same code `npx -y <tool>` would run, at its released version. `gsc-axi` points at its git
-repository until its first npm release.
+same code `npx -y <tool>` would run, at its released version.
 
 Note that the `github: owner/repo` source form clones over `git@github.com` and fails on a
 machine with no SSH key. Where a git source is unavoidable, use the `url` form with an
