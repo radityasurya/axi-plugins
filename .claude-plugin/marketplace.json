@@ -51,7 +51,7 @@
     },
     {
       "name": "openpanel-axi",
-      "description": "OpenPanel analytics: visitors, pages, traffic sources, devices, campaigns, raw events, plus project/client management and event tracking.",
+      "description": "OpenPanel analytics: visitors, pages, traffic sources, devices and campaigns, funnels, retention, user flow, sessions and profiles, plus Search Console, project/client management, and event tracking.",
       "category": "analytics",
       "source": {
         "source": "npm",
