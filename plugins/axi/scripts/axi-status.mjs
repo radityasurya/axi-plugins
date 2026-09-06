@@ -134,6 +134,16 @@ export async function discover() {
 // naming the tool means a new tool that does the same is handled too.
 const TIMESTAMP_VALUE = /:\s*"?\d{4}-\d{2}-\d{2}T[\d:.]+Z?"?\s*$/;
 
+// A bare TOON tabular header (`quota[6]{provider,scope,...}:`) is the shape of
+// the answer, not the answer — and it is long. Report the shape instead, so a
+// tool whose home view opens with a table still says something legible.
+const TABULAR_HEADER = /^([\w.]+)\[(\d+)\]\{[^}]*\}:\s*$/;
+
+function shapeOnly(line) {
+  const header = line.match(TABULAR_HEADER);
+  return header ? `${header[1]}: ${header[2]} rows` : line;
+}
+
 /** The first lines that are actual state, not the AXI identity header. */
 export function summarize(stdout) {
   const lines = stdout
@@ -151,7 +161,7 @@ export function summarize(stdout) {
   // Returned untruncated: the status line is clipped at render time for token
   // discipline, but the fix line carries URLs and commands that stop working
   // when cut mid-string.
-  return lines.slice(0, 2);
+  return lines.slice(0, 2).map(shapeOnly);
 }
 
 export async function probe(tool) {

@@ -76,7 +76,8 @@ test("a timestamp-valued field is not a status", async () => {
   const { summarize } = await import("../plugins/axi/scripts/axi-status.mjs");
   // quota-axi leads with `generatedAt`, which says nothing about whether it works.
   const lines = summarize('generatedAt: "2026-09-06T01:15:12.642Z"\nquota[6]{provider,scope}:\n  claude,session');
-  assert.match(lines[0], /^quota\[6\]/);
+  // The timestamp is skipped; the header that follows renders as its shape.
+  assert.equal(lines[0], "quota: 6 rows");
 });
 
 test("state separates a tool that is unconfigured from one that failed", async () => {
@@ -117,4 +118,12 @@ test("a fix is never truncated — it has to stay runnable", async () => {
   const { fixFor } = await import("../plugins/axi/scripts/axi-status.mjs");
   const long = `help[1]: Run \`npx -y some-tool --with ${"x".repeat(120)}\``;
   assert.ok(!fixFor({ ok: true, lines: ["no creds", long] }).includes("…"));
+});
+
+test("a tabular header is reported as a shape, not pasted in full", async () => {
+  const { summarize } = await import("../plugins/axi/scripts/axi-status.mjs");
+  const out = summarize("quota[6]{provider,scope,effectivePercentRemaining,spendPriority,runway}:\n  claude,session,42");
+  assert.equal(out[0], "quota: 6 rows");
+  // An inline array has its values after the colon and stays as it is.
+  assert.equal(summarize("help[2]: do a thing,do another")[0], "help[2]: do a thing,do another");
 });
