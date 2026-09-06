@@ -59,6 +59,16 @@
       }
     },
     {
+      "name": "gsc-axi",
+      "description": "Google Search Console: search performance by query/page/country/device, period comparisons, queries ranking 4-20, URL indexing status, and sitemaps.",
+      "category": "analytics",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/radityasurya/gsc-axi.git",
+        "ref": "main"
+      }
+    },
+    {
       "name": "chrome-devtools-axi",
       "description": "Drive a real Chrome session: navigate, click, fill forms, run JavaScript, read console and network, screenshot, audit performance.",
       "category": "development",

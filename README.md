@@ -39,6 +39,7 @@ so the same repo works unchanged:
 | `cloudflare-axi` | Zones, DNS, edge cache, Email Routing, bot protection |
 | `coolify-axi` | Applications, databases, services, servers, deployments |
 | `openpanel-axi` | Analytics reads, project/client management, event tracking |
+| `gsc-axi` | Search Console: performance, comparisons, URL inspection, sitemaps |
 | `chrome-devtools-axi` | Navigate, click, fill, evaluate, console, network, screenshots |
 | `quota-axi` | Remaining quota and pace across local agent providers |
 
@@ -85,7 +86,8 @@ skill index.
 ## How the entries resolve
 
 Plugins point at the **published npm package** for each tool, so installing one gets the
-same code `npx -y <tool>` would run, at its released version.
+same code `npx -y <tool>` would run, at its released version. `gsc-axi` points at its git
+repository until its first npm release.
 
 Note that the `github: owner/repo` source form clones over `git@github.com` and fails on a
 machine with no SSH key. Where a git source is unavoidable, use the `url` form with an
