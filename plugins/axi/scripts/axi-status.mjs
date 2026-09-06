@@ -129,13 +129,24 @@ async function discover() {
   return [...found.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// A field whose value is only a timestamp says nothing about whether the tool
+// works — `quota-axi` leads with `generatedAt`. Skipping the shape rather than
+// naming the tool means a new tool that does the same is handled too.
+const TIMESTAMP_VALUE = /:\s*"?\d{4}-\d{2}-\d{2}T[\d:.]+Z?"?\s*$/;
+
 /** The first lines that are actual state, not the AXI identity header. */
-function summarize(stdout) {
+export function summarize(stdout) {
   const lines = stdout
     .split("\n")
     .map((line) => line.trimEnd())
     // Drop the AXI identity header and any key with no value behind it.
-    .filter((line) => line.trim() && !/^(bin|description):/.test(line) && !/^[\w[\]]+:\s*$/.test(line));
+    .filter(
+      (line) =>
+        line.trim() &&
+        !/^(bin|description):/.test(line) &&
+        !/^[\w[\]]+:\s*$/.test(line) &&
+        !TIMESTAMP_VALUE.test(line),
+    );
   if (lines.length === 0) return ["(no output)"];
   return lines.slice(0, 2).map((line) => (line.length > WIDTH ? `${line.slice(0, WIDTH - 1)}…` : line));
 }

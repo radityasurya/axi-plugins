@@ -71,3 +71,10 @@ test("the marketplace manifest stays valid and installable", () => {
     assert.notEqual(plugin.source?.source, "github", `${plugin.name} must use url, not the github shorthand`);
   }
 });
+
+test("a timestamp-valued field is not a status", async () => {
+  const { summarize } = await import("../plugins/axi/scripts/axi-status.mjs");
+  // quota-axi leads with `generatedAt`, which says nothing about whether it works.
+  const lines = summarize('generatedAt: "2026-09-06T01:15:12.642Z"\nquota[6]{provider,scope}:\n  claude,session');
+  assert.match(lines[0], /^quota\[6\]/);
+});
