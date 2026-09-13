@@ -28,7 +28,8 @@
       "category": "devops",
       "source": {
         "source": "npm",
-        "package": "aws-axi"
+        "package": "aws-axi",
+        "version": "0.7.3"
       }
     },
     {
