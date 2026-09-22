@@ -106,7 +106,9 @@ tool ships its own `skills/<name>/SKILL.md`, and this marketplace only reference
 `gh-axi`, `quota-axi`, and `chrome-devtools-axi` are by
 [@kunchenguid](https://github.com/kunchenguid); `aws-axi` is by
 [@bauti-defi](https://github.com/bauti-defi). This marketplace lists them; it does not
-redistribute them.
+redistribute them. The one exception is `quota-axi`: it installs
+[`@radityasurya/quota-axi`](https://github.com/radityasurya/quota-axi), an MIT fork that
+reads Claude usage as percent used. Upstream 0.1.50 reports it as percent remaining.
 
 ## License
 

@@ -92,7 +92,7 @@
       "category": "productivity",
       "source": {
         "source": "npm",
-        "package": "quota-axi"
+        "package": "@radityasurya/quota-axi"
       }
     }
   ]
